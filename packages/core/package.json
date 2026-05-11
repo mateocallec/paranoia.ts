@@ -1,0 +1,71 @@
+{
+  "name": "paranoia-ts",
+  "version": "1.0.0",
+  "description": "Hybrid post-quantum end-to-end encryption for frontend applications — ML-KEM-1024 + P-521 + AES-256-GCM + Argon2id, built for the browser and Node.js.",
+  "type": "module",
+  "main": "./dist/paranoia.umd.cjs",
+  "module": "./dist/paranoia.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/paranoia.js",
+      "require": "./dist/paranoia.umd.cjs"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+  "scripts": {
+    "build":      "tsc --noEmit && vite build",
+    "dev":        "vite build --watch",
+    "typecheck":  "tsc --noEmit",
+    "test":       "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "cryptography",
+    "post-quantum",
+    "ml-kem",
+    "kyber",
+    "fips-203",
+    "p-521",
+    "ecdh",
+    "aes-gcm",
+    "argon2id",
+    "hybrid-encryption",
+    "webauthn",
+    "prf",
+    "webcam-trng",
+    "typescript",
+    "zero-knowledge",
+    "e2ee"
+  ],
+  "author": {
+    "name": "Matéo Florian Callec",
+    "email": "mateo@callec.net"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateocallec/paranoia.ts.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/mateocallec/paranoia.ts#readme",
+  "bugs": {
+    "url": "https://github.com/mateocallec/paranoia.ts/issues"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.6.0",
+    "@noble/hashes": "^1.5.0",
+    "@noble/post-quantum": "^0.2.1",
+    "hash-wasm": "^4.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0",
+    "vite-plugin-dts": "^4.2.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

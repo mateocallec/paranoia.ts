@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>paranoia.ts — examples</title>
+  <style>
+    body { font-family: monospace; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #0d0d0d; color: #c9d1d9; }
+    h2   { color: #58a6ff; margin-top: 2rem; }
+    button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: .4rem 1rem; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #30363d; }
+    textarea, input { width: 100%; box-sizing: border-box; background: #161b22; color: #c9d1d9; border: 1px solid #30363d; padding: .4rem; border-radius: 4px; }
+    pre  { background: #161b22; padding: 1rem; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; font-size: .85rem; }
+    .ok  { color: #3fb950; }
+    .err { color: #f85149; }
+    hr   { border-color: #30363d; }
+  </style>
+</head>
+<body>
+<h1>paranoia.ts — live examples</h1>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>① Passphrase seal / unseal</h2>
+<p>Argon2id KDF → AES-256-GCM.  Quantum-resistant symmetric encryption.</p>
+<textarea id="pp-plaintext" rows="3">Hello, quantum adversary! This is secret.</textarea><br><br>
+<input id="pp-passphrase" type="password" placeholder="Enter passphrase" value="correct-horse-battery-staple" /><br><br>
+<button onclick="runPassphrase()">Seal then Unseal</button>
+<pre id="pp-out">—</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>② Hybrid asymmetric seal / unseal (ML-KEM-1024 + P-521)</h2>
+<p>Generate a keypair, encrypt to the public key, decrypt with the private key.</p>
+<textarea id="asym-plaintext" rows="3">Top-secret hybrid quantum-resistant message.</textarea><br><br>
+<button onclick="runAsymmetric()">Generate keypair → Seal → Unseal</button>
+<pre id="asym-out">—</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>③ Webcam entropy collector</h2>
+<p>Harvests pixel noise from the camera and mixes it with system PRNG via HMAC-SHA3-256.</p>
+<button onclick="runWebcam()">Enable webcam entropy</button>
+<pre id="wc-out">—</pre>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>④ WebAuthn-backed key storage in IndexedDB</h2>
+<p>Register a platform authenticator, store an encrypted keypair, reload it.</p>
+<button onclick="runWebAuthn()">Register WebAuthn → Store keypair → Reload keypair</button>
+<pre id="wa-out">—</pre>
+
+<hr />
+<pre id="global-log"></pre>
+
+<script type="module">
+  // ── import from the built library (adjust path for your dev setup) ──
+  // In a real project: import { Paranoia, ... } from 'paranoia.ts'
+  // Here we import from the source via a Vite dev server:
+  import {
+    Paranoia,
+    STRONG_ARGON2_PARAMS,
+    enableWebcamEntropy,
+    disableWebcamEntropy,
+    isWebcamEntropyActive,
+    wipe,
+  } from '../src/index.ts';
+
+  const paranoia = new Paranoia();
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+
+  function log(elId, msg, isErr = false) {
+    const el = document.getElementById(elId);
+    el.textContent = msg;
+    el.className = isErr ? 'err' : 'ok';
+  }
+
+  function toHex(buf) {
+    return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function fromHex(hex) {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < bytes.length; i++)
+      bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    return bytes;
+  }
+
+  // ── ① Passphrase ──────────────────────────────────────────────────────────
+
+  window.runPassphrase = async () => {
+    const out = 'pp-out';
+    try {
+      const enc    = new TextEncoder();
+      const dec    = new TextDecoder();
+      const plain  = enc.encode(document.getElementById('pp-plaintext').value);
+      const phrase = document.getElementById('pp-passphrase').value;
+
+      log(out, 'Sealing…  (Argon2id running — may take a second)');
+
+      const t0     = performance.now();
+      const sealed = await paranoia.seal(plain, phrase);
+      const t1     = performance.now();
+
+      log(out,
+        `Sealed in ${(t1 - t0).toFixed(0)} ms\n` +
+        `Packet size : ${sealed.length} bytes\n` +
+        `Hex (first 64B): ${toHex(sealed.subarray(0, 64))}…\n\n` +
+        `Unsealing…`
+      );
+
+      const t2        = performance.now();
+      const recovered = await paranoia.unseal(sealed, phrase);
+      const t3        = performance.now();
+
+      const text = dec.decode(recovered);
+      wipe(recovered);
+
+      log(out,
+        `✓ Sealed   in ${(t1 - t0).toFixed(0)} ms\n` +
+        `✓ Unsealed in ${(t3 - t2).toFixed(0)} ms\n` +
+        `✓ Recovered: "${text}"\n\n` +
+        `Packet layout (passphrase mode):\n` +
+        `  [0]        version  = 0x${sealed[0].toString(16)}\n` +
+        `  [1]        mode     = 0x${sealed[1].toString(16)} (passphrase)\n` +
+        `  [2..33]    salt     = ${toHex(sealed.subarray(2, 34))}\n` +
+        `  [34..36]   iters    = ${(sealed[34] << 16 | sealed[35] << 8 | sealed[36])}\n` +
+        `  [37..40]   mem KB   = ${(sealed[37] << 24 | sealed[38] << 16 | sealed[39] << 8 | sealed[40])}\n` +
+        `  [41]       parallel = ${sealed[41]}\n` +
+        `  [42..53]   nonce    = ${toHex(sealed.subarray(42, 54))}\n` +
+        `  [54..]     ct+tag   = ${sealed.length - 54} bytes`
+      );
+    } catch (err) {
+      log(out, `Error: ${err.message}`, true);
+    }
+  };
+
+  // ── ② Asymmetric ──────────────────────────────────────────────────────────
+
+  window.runAsymmetric = async () => {
+    const out = 'asym-out';
+    try {
+      const enc   = new TextEncoder();
+      const dec   = new TextDecoder();
+      const plain = enc.encode(document.getElementById('asym-plaintext').value);
+
+      log(out, 'Generating hybrid keypair (ML-KEM-1024 + P-521)…');
+
+      const keyPair = paranoia.generateKeyPair();
+      log(out,
+        `Keypair generated\n` +
+        `  ML-KEM-1024 pub key : ${keyPair.publicKey.mlkem.length} bytes\n` +
+        `  ML-KEM-1024 sec key : ${keyPair.privateKey.mlkem.length} bytes\n` +
+        `  P-521       pub key : ${keyPair.publicKey.p521.length} bytes (compressed)\n` +
+        `  P-521       sec key : ${keyPair.privateKey.p521.length} bytes\n\n` +
+        `Sealing…`
+      );
+
+      const t0     = performance.now();
+      const sealed = await paranoia.sealTo(plain, keyPair.publicKey);
+      const t1     = performance.now();
+
+      log(out,
+        `Sealed in ${(t1 - t0).toFixed(0)} ms\n` +
+        `Packet size: ${sealed.length} bytes\n\n` +
+        `Unsealing…`
+      );
+
+      const t2        = performance.now();
+      const recovered = await paranoia.unsealWith(sealed, keyPair);
+      const t3        = performance.now();
+
+      // Wipe private key material after use
+      wipe(keyPair.privateKey.mlkem, keyPair.privateKey.p521);
+
+      const text = dec.decode(recovered);
+      wipe(recovered);
+
+      log(out,
+        `✓ Sealed   in ${(t1 - t0).toFixed(0)} ms\n` +
+        `✓ Unsealed in ${(t3 - t2).toFixed(0)} ms\n` +
+        `✓ Recovered: "${text}"\n\n` +
+        `Packet layout (asymmetric mode):\n` +
+        `  [0]           version        = 0x${sealed[0].toString(16)}\n` +
+        `  [1]           mode           = 0x${sealed[1].toString(16)} (asymmetric)\n` +
+        `  [2..1569]     ML-KEM-1024 ct = 1568 bytes\n` +
+        `  [1570..1636]  P-521 eph pk   = 67 bytes (compressed)\n` +
+        `  [1637..1648]  AES-GCM nonce  = 12 bytes\n` +
+        `  [1649..]      ciphertext+tag = ${sealed.length - 1649} bytes`
+      );
+    } catch (err) {
+      log(out, `Error: ${err.message}`, true);
+    }
+  };
+
+  // ── ③ Webcam entropy ─────────────────────────────────────────────────────
+
+  window.runWebcam = async () => {
+    const out = 'wc-out';
+    try {
+      log(out, 'Requesting camera access…');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+      log(out, 'Harvesting pixel noise from 8 frames…');
+      await paranoia.enableWebcamEntropy(stream);
+
+      // Show that the random output is now entropy-enhanced
+      const r1 = paranoia.random(32);
+      const r2 = paranoia.random(32);
+
+      log(out,
+        `✓ Webcam entropy active: ${isWebcamEntropyActive()}\n\n` +
+        `Two successive 32-byte random samples (should look different):\n` +
+        `  r1 = ${toHex(r1)}\n` +
+        `  r2 = ${toHex(r2)}\n\n` +
+        `The output is HMAC-SHA3-256(key=systemRandom, data=webcamPool) XOR systemRandom.\n` +
+        `Entropy can only increase — a fully dark or static camera cannot reduce it.`
+      );
+
+      // Clean up stream tracks when done
+      stream.getTracks().forEach(t => t.stop());
+      paranoia.disableWebcamEntropy();
+    } catch (err) {
+      log(out, `Error: ${err.message}`, true);
+    }
+  };
+
+  // ── ④ WebAuthn + IndexedDB ────────────────────────────────────────────────
+
+  window.runWebAuthn = async () => {
+    const out = 'wa-out';
+    try {
+      log(out, 'Registering WebAuthn credential (follow browser prompt)…');
+      const credential = await paranoia.registerWebAuthn();
+      log(out, `✓ Credential ID: ${toHex(credential.id).slice(0, 40)}…\n\nGenerating keypair…`);
+
+      const keyPair = paranoia.generateKeyPair();
+      log(out, `✓ Keypair generated.\n\nDeriving WebAuthn wrapping key (authenticate again)…`);
+
+      // First authentication: to wrap the key
+      const wrapKey = await paranoia.getWebAuthnWrappingKey(credential.id);
+      log(out, `✓ Wrapping key derived.\n\nStoring encrypted keypair in IndexedDB…`);
+
+      await paranoia.storeKeyPair(keyPair, wrapKey, 'demo-key');
+      wipe(wrapKey);
+      wipe(keyPair.privateKey.mlkem, keyPair.privateKey.p521);
+      log(out, `✓ Keypair stored in IndexedDB (encrypted).\n\nReloading (authenticate again)…`);
+
+      // Second authentication: to unwrap the key
+      const unwrapKey = await paranoia.getWebAuthnWrappingKey(credential.id);
+      const loaded    = await paranoia.loadKeyPair(unwrapKey, 'demo-key');
+      wipe(unwrapKey);
+
+      log(out,
+        `✓ Keypair reloaded from IndexedDB.\n\n` +
+        `  ML-KEM pub key matches: ${toHex(loaded.publicKey.mlkem.subarray(0, 8))}…\n` +
+        `  P-521  pub key matches: ${toHex(loaded.publicKey.p521)}\n\n` +
+        `Private key material never touched localStorage.\n` +
+        `It was stored only as AES-GCM ciphertext in IndexedDB.`
+      );
+
+      wipe(loaded.privateKey.mlkem, loaded.privateKey.p521);
+      await paranoia.deleteKeyPair('demo-key');
+    } catch (err) {
+      log(out, `Error: ${err.message}`, true);
+    }
+  };
+</script>
+</body>
+</html>

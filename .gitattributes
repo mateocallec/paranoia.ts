@@ -1,0 +1,38 @@
+# ─── Line endings ─────────────────────────────────────────────────────────────
+* text=auto eol=lf
+
+# ─── TypeScript / JavaScript ──────────────────────────────────────────────────
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.json text eol=lf
+
+# ─── Documentation ────────────────────────────────────────────────────────────
+*.md   text eol=lf diff=markdown
+*.txt  text eol=lf
+
+# ─── Config ───────────────────────────────────────────────────────────────────
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.toml text eol=lf
+.gitignore    text eol=lf
+.gitattributes text eol=lf
+
+# ─── Shell scripts ────────────────────────────────────────────────────────────
+*.sh   text eol=lf
+entrypoint.sh text eol=lf
+
+# ─── Binary — never diff ──────────────────────────────────────────────────────
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.wasm binary
+*.node binary
+
+# ─── Linguist — GitHub language stats ────────────────────────────────────────
+documentation/ linguist-documentation
+*.md           linguist-documentation

@@ -1,0 +1,40 @@
+{
+  "name": "@paranoia-ts/monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo for paranoia-ts — Hybrid post-quantum end-to-end encryption for frontend applications.",
+  "private": true,
+  "workspaces": [
+    "packages/core",
+    "packages/cli"
+  ],
+  "scripts": {
+    "build":     "npm run build -w paranoia-ts && npm run build -w paranoia-cli",
+    "build:lib": "npm run build -w paranoia-ts",
+    "build:cli": "npm run build -w paranoia-cli",
+    "typecheck": "npm run typecheck -w paranoia-ts && npm run typecheck -w paranoia-cli"
+  },
+  "keywords": [
+    "post-quantum",
+    "cryptography",
+    "ml-kem",
+    "fips-203",
+    "hybrid-encryption",
+    "typescript"
+  ],
+  "author": {
+    "name": "Matéo Florian Callec",
+    "email": "mateo@callec.net"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateocallec/paranoia.ts.git"
+  },
+  "homepage": "https://github.com/mateocallec/paranoia.ts#readme",
+  "bugs": {
+    "url": "https://github.com/mateocallec/paranoia.ts/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

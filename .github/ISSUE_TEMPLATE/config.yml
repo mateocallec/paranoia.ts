@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/mateocallec/paranoia.ts/blob/main/SECURITY.md
+    about: Do not open a public issue for security vulnerabilities. Follow the process in SECURITY.md.
+  - name: Question / discussion
+    url: https://github.com/mateocallec/paranoia.ts/discussions
+    about: General questions, usage help, and design discussions.
