@@ -75,7 +75,11 @@ jobs:
       - name: Publish paranoia-ts to npm
         working-directory: packages/core
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish paranoia-cli to npm
         working-directory: packages/cli
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
