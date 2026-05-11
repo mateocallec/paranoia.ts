@@ -1,0 +1,67 @@
+name: Publish release assets
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    # Skip pre-releases — only run on full releases
+    if: ${{ !github.event.release.prerelease }}
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # needed to upload release assets
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ── Install ──────────────────────────────────────────────────────────────
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      # ── Build ─────────────────────────────────────────────────────────────────
+
+      - name: Build paranoia-ts (library)
+        run: npm run build:lib
+
+      - name: Build paranoia-cli
+        run: npm run build:cli
+
+      # ── Pack ──────────────────────────────────────────────────────────────────
+
+      - name: Pack paranoia-ts
+        working-directory: packages/core
+        run: npm pack
+
+      - name: Pack paranoia-cli
+        working-directory: packages/cli
+        run: npm pack
+
+      - name: Locate tarballs
+        id: tarballs
+        run: |
+          CORE=$(ls packages/core/paranoia-ts-*.tgz)
+          CLI=$(ls packages/cli/paranoia-cli-*.tgz)
+          echo "core=$CORE" >> $GITHUB_OUTPUT
+          echo "cli=$CLI"   >> $GITHUB_OUTPUT
+
+      # ── Attach tarballs to the GitHub release ────────────────────────────────
+
+      - name: Upload paranoia-ts tarball to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.tarballs.outputs.core }}
+
+      - name: Upload paranoia-cli tarball to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.tarballs.outputs.cli }}
