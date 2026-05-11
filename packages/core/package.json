@@ -12,12 +12,17 @@
       "require": "./dist/paranoia.umd.cjs"
     }
   },
-  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
-    "build":      "tsc --noEmit && vite build",
-    "dev":        "vite build --watch",
-    "typecheck":  "tsc --noEmit",
-    "test":       "vitest run",
+    "build": "tsc --noEmit && vite build",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "test:watch": "vitest"
   },
   "keywords": [

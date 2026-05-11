@@ -4,7 +4,10 @@ import pc from 'picocolors';
 import { getSecureRandom, injectEntropy } from 'paranoia-ts';
 import { harvestWebcamEntropy, ffmpegAvailable } from '../lib/webcam.js';
 
-interface EntropyOptions { webcam: boolean; output?: string }
+interface EntropyOptions {
+  webcam: boolean;
+  output?: string;
+}
 
 export async function entropyCommand(bytesArg: string, opts: EntropyOptions): Promise<void> {
   const bytes = parseInt(bytesArg, 10);
@@ -23,7 +26,7 @@ export async function entropyCommand(bytesArg: string, opts: EntropyOptions): Pr
       s.start('Capturing webcam frames…');
       try {
         const digest = harvestWebcamEntropy();
-        injectEntropy(digest);  // library handles the HMAC-SHA3-256 mixing
+        injectEntropy(digest); // library handles the HMAC-SHA3-256 mixing
         digest.fill(0);
         s.stop(pc.green('✓') + ' Webcam entropy injected into library pool.');
       } catch (e) {
@@ -34,7 +37,7 @@ export async function entropyCommand(bytesArg: string, opts: EntropyOptions): Pr
 
   // Use library's getSecureRandom — now webcam-enhanced if --webcam was passed
   const random = getSecureRandom(bytes);
-  const hex    = Buffer.from(random).toString('hex');
+  const hex = Buffer.from(random).toString('hex');
   random.fill(0);
 
   if (opts.output) {

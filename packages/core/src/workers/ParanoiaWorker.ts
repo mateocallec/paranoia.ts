@@ -1,8 +1,6 @@
 import type { HybridKeyPair, HybridPublicKey, SealOptions } from '../types';
 
-type Res =
-  | { id: string; ok: true;  result: unknown }
-  | { id: string; ok: false; error: string };
+type Res = { id: string; ok: true; result: unknown } | { id: string; ok: false; error: string };
 
 /**
  * Proxy class that mirrors the `Paranoia` API but runs every operation inside
@@ -16,10 +14,13 @@ type Res =
  */
 export class ParanoiaWorker {
   private readonly worker: Worker;
-  private readonly pending = new Map<string, {
-    resolve: (v: unknown) => void;
-    reject:  (e: Error)   => void;
-  }>();
+  private readonly pending = new Map<
+    string,
+    {
+      resolve: (v: unknown) => void;
+      reject: (e: Error) => void;
+    }
+  >();
   private idCounter = 0;
 
   constructor(worker: Worker) {
@@ -29,7 +30,7 @@ export class ParanoiaWorker {
       if (!p) return;
       this.pending.delete(e.data.id);
       if (e.data.ok) p.resolve(e.data.result);
-      else           p.reject(new Error(e.data.error));
+      else p.reject(new Error(e.data.error));
     };
     this.worker.onerror = (e: ErrorEvent) => {
       // Reject all pending promises on unrecoverable worker error
@@ -49,7 +50,7 @@ export class ParanoiaWorker {
         reject,
       });
       if (transfer?.length) this.worker.postMessage({ ...msg, id }, transfer);
-      else                  this.worker.postMessage({ ...msg, id });
+      else this.worker.postMessage({ ...msg, id });
     });
   }
 

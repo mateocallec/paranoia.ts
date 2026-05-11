@@ -18,12 +18,21 @@ export { DEFAULT_ARGON2_PARAMS, STRONG_ARGON2_PARAMS } from './types';
 
 // ─── Low-level primitives (for advanced users) ────────────────────────────────
 
-export { getSecureRandom, enableWebcamEntropy, disableWebcamEntropy, isWebcamEntropyActive, injectEntropy } from './core/entropy';
+export {
+  getSecureRandom,
+  enableWebcamEntropy,
+  disableWebcamEntropy,
+  isWebcamEntropyActive,
+  injectEntropy,
+} from './core/entropy';
 export {
   generateHybridKeyPair,
-  hybridEncapsulate, hybridDecapsulate,
-  encapsulatePqc,   decapsulatePqc,
-  encapsulateP521,  decapsulateP521,
+  hybridEncapsulate,
+  hybridDecapsulate,
+  encapsulatePqc,
+  decapsulatePqc,
+  encapsulateP521,
+  decapsulateP521,
 } from './core/kem';
 export type { P521EncapsulateResult } from './core/kem';
 export { deriveKey } from './core/kdf';
@@ -31,4 +40,9 @@ export { deriveKeyPairFromMasterPassword, deriveKeyPairAndWrapKey } from './core
 export { aesGcmEncrypt, aesGcmDecrypt } from './core/symmetric';
 export { wipe, constantTimeEqual, concat } from './core/memory';
 export { storeKeyPair, loadKeyPair, deleteKeyPair, SessionKeyStore } from './storage/indexeddb';
-export { registerWebAuthnCredential, deriveWebAuthnWrappingKey, registerWebAuthnPRF, getWebAuthnPRFKey } from './storage/webauthn';
+export {
+  registerWebAuthnCredential,
+  deriveWebAuthnWrappingKey,
+  registerWebAuthnPRF,
+  getWebAuthnPRFKey,
+} from './storage/webauthn';

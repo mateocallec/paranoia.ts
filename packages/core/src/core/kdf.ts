@@ -14,18 +14,17 @@ export async function deriveKey(
   params: Argon2Params = DEFAULT_ARGON2_PARAMS,
   hashLength = 32,
 ): Promise<Uint8Array> {
-  const ownedPassword = typeof passphrase === 'string'
-    ? new TextEncoder().encode(passphrase)
-    : passphrase;
+  const ownedPassword =
+    typeof passphrase === 'string' ? new TextEncoder().encode(passphrase) : passphrase;
 
   const key = await argon2id({
-    password:    ownedPassword,
+    password: ownedPassword,
     salt,
-    iterations:  params.iterations,
-    memorySize:  params.memory,
+    iterations: params.iterations,
+    memorySize: params.memory,
     parallelism: params.parallelism,
     hashLength,
-    outputType:  'binary',
+    outputType: 'binary',
   });
 
   if (typeof passphrase === 'string') wipe(ownedPassword);

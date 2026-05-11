@@ -58,15 +58,26 @@ const fromB64url = (s: string): Uint8Array =>
 function buildP521Pkcs8(privKeyBytes: Uint8Array): Uint8Array {
   const buf = new Uint8Array(98);
   let o = 0;
-  buf[o++] = 0x30; buf[o++] = 0x60; // SEQUENCE (96 B)
-  buf[o++] = 0x02; buf[o++] = 0x01; buf[o++] = 0x00; // INTEGER version=0
-  buf[o++] = 0x30; buf[o++] = 0x10; // AlgorithmIdentifier SEQUENCE (16 B)
-  buf.set([0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01], o); o += 9; // OID id-ecPublicKey
-  buf.set([0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23], o); o += 7;             // OID secp521r1
-  buf[o++] = 0x04; buf[o++] = 0x49; // OCTET STRING (73 B)
-  buf[o++] = 0x30; buf[o++] = 0x47; // ECPrivateKey SEQUENCE (71 B)
-  buf[o++] = 0x02; buf[o++] = 0x01; buf[o++] = 0x01; // INTEGER version=1
-  buf[o++] = 0x04; buf[o++] = 0x42; // privateKey OCTET STRING (66 B)
+  buf[o++] = 0x30;
+  buf[o++] = 0x60; // SEQUENCE (96 B)
+  buf[o++] = 0x02;
+  buf[o++] = 0x01;
+  buf[o++] = 0x00; // INTEGER version=0
+  buf[o++] = 0x30;
+  buf[o++] = 0x10; // AlgorithmIdentifier SEQUENCE (16 B)
+  buf.set([0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01], o);
+  o += 9; // OID id-ecPublicKey
+  buf.set([0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23], o);
+  o += 7; // OID secp521r1
+  buf[o++] = 0x04;
+  buf[o++] = 0x49; // OCTET STRING (73 B)
+  buf[o++] = 0x30;
+  buf[o++] = 0x47; // ECPrivateKey SEQUENCE (71 B)
+  buf[o++] = 0x02;
+  buf[o++] = 0x01;
+  buf[o++] = 0x01; // INTEGER version=1
+  buf[o++] = 0x04;
+  buf[o++] = 0x42; // privateKey OCTET STRING (66 B)
   // Left-pad scalar to exactly 66 bytes
   buf.set(privKeyBytes, o + (SIZES.P521_SK - privKeyBytes.length));
   return buf;
@@ -74,10 +85,10 @@ function buildP521Pkcs8(privKeyBytes: Uint8Array): Uint8Array {
 
 /** HKDF-SHA-384 via SubtleCrypto — native, hardware-accelerated. */
 async function hkdfSHA384(
-  ikm:  Uint8Array,
+  ikm: Uint8Array,
   salt: Uint8Array,
   info: Uint8Array,
-  len:  number,
+  len: number,
 ): Promise<Uint8Array> {
   const base = await crypto.subtle.importKey('raw', toAB(ikm), 'HKDF', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits(
@@ -96,13 +107,11 @@ async function hkdfSHA384(
  * @noble/curves is used only for point compression — no secret data involved.
  */
 async function generateP521KeyPair(): Promise<{ privKey: Uint8Array; pubKey: Uint8Array }> {
-  const kp = await crypto.subtle.generateKey(
-    { name: 'ECDH', namedCurve: 'P-521' },
-    true,
-    ['deriveBits'],
-  );
+  const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-521' }, true, [
+    'deriveBits',
+  ]);
 
-  const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey) as JsonWebKey & { d?: string };
+  const jwk = (await crypto.subtle.exportKey('jwk', kp.privateKey)) as JsonWebKey & { d?: string };
   if (!jwk.d) throw new Error('P-521 JWK missing d field');
 
   const dBytes = fromB64url(jwk.d);
@@ -125,14 +134,18 @@ async function generateP521KeyPair(): Promise<{ privKey: Uint8Array; pubKey: Uin
  * @noble/curves is used only to decompress the peer public key — a public-data
  * operation with no timing-sensitive material.
  */
-async function ecdhP521(privKeyBytes: Uint8Array, peerPubCompressed: Uint8Array): Promise<Uint8Array> {
+async function ecdhP521(
+  privKeyBytes: Uint8Array,
+  peerPubCompressed: Uint8Array,
+): Promise<Uint8Array> {
   // Decompress peer public key: 67 B compressed → 133 B uncompressed (public data)
   const peerUncompressed = p521.ProjectivePoint.fromHex(peerPubCompressed).toRawBytes(false);
 
   // Import private key as PKCS#8 binary — no JS string for the private scalar
-  const pkcs8  = buildP521Pkcs8(privKeyBytes);
+  const pkcs8 = buildP521Pkcs8(privKeyBytes);
   const privCk = await crypto.subtle.importKey(
-    'pkcs8', toAB(pkcs8),
+    'pkcs8',
+    toAB(pkcs8),
     { name: 'ECDH', namedCurve: 'P-521' },
     false,
     ['deriveBits'],
@@ -141,18 +154,15 @@ async function ecdhP521(privKeyBytes: Uint8Array, peerPubCompressed: Uint8Array)
 
   // Import peer public key as raw uncompressed point (no JWK string needed)
   const peerCk = await crypto.subtle.importKey(
-    'raw', toAB(peerUncompressed),
+    'raw',
+    toAB(peerUncompressed),
     { name: 'ECDH', namedCurve: 'P-521' },
     false,
     [],
   );
 
   // Constant-time ECDH — 528 bits = 66 bytes for P-521
-  const bits = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: peerCk },
-    privCk,
-    528,
-  );
+  const bits = await crypto.subtle.deriveBits({ name: 'ECDH', public: peerCk }, privCk, 528);
 
   return new Uint8Array(bits);
 }
@@ -167,7 +177,7 @@ export async function generateHybridKeyPair(): Promise<HybridKeyPair> {
   const { privKey: p521Sk, pubKey: p521Pk } = await generateP521KeyPair();
 
   return {
-    publicKey:  { mlkem: mlkemPk, p521: p521Pk },
+    publicKey: { mlkem: mlkemPk, p521: p521Pk },
     privateKey: { mlkem: mlkemSk, p521: p521Sk },
   };
 }
@@ -175,14 +185,18 @@ export async function generateHybridKeyPair(): Promise<HybridKeyPair> {
 // ─── Hybrid KEM ───────────────────────────────────────────────────────────────
 
 export interface EncapsulateResult {
-  ciphertext:   Uint8Array;
+  ciphertext: Uint8Array;
   sharedSecret: Uint8Array;
 }
 
-export async function hybridEncapsulate(recipientPubKey: HybridPublicKey): Promise<EncapsulateResult> {
+export async function hybridEncapsulate(
+  recipientPubKey: HybridPublicKey,
+): Promise<EncapsulateResult> {
   const mlkemSeed = getSecureRandom(32);
-  const { cipherText: mlkemCt, sharedSecret: mlkemSs } =
-    ml_kem1024.encapsulate(recipientPubKey.mlkem, mlkemSeed);
+  const { cipherText: mlkemCt, sharedSecret: mlkemSs } = ml_kem1024.encapsulate(
+    recipientPubKey.mlkem,
+    mlkemSeed,
+  );
   wipe(mlkemSeed);
 
   const { privKey: ephSk, pubKey: ephPk } = await generateP521KeyPair();
@@ -206,10 +220,10 @@ export async function hybridDecapsulate(
   }
 
   const mlkemCt = ciphertext.subarray(0, SIZES.MLKEM_CT);
-  const ephPk   = ciphertext.subarray(SIZES.MLKEM_CT);
+  const ephPk = ciphertext.subarray(SIZES.MLKEM_CT);
 
   const mlkemSs = ml_kem1024.decapsulate(mlkemCt, recipientPrivKey.mlkem);
-  const p521Raw  = await ecdhP521(recipientPrivKey.p521, ephPk);
+  const p521Raw = await ecdhP521(recipientPrivKey.p521, ephPk);
 
   const sharedSecret = await combineSecrets(mlkemSs, p521Raw, ephPk);
   wipe(mlkemSs as Uint8Array);
@@ -220,7 +234,7 @@ export async function hybridDecapsulate(
 
 // ─── Single-algorithm variants ────────────────────────────────────────────────
 
-const PQC_INFO  = new TextEncoder().encode('paranoia.ts v1 pqc-only kem');
+const PQC_INFO = new TextEncoder().encode('paranoia.ts v1 pqc-only kem');
 const P521_INFO = new TextEncoder().encode('paranoia.ts v1 p521-only kem');
 
 export async function encapsulatePqc(mlkemPublicKey: Uint8Array): Promise<EncapsulateResult> {
@@ -233,10 +247,10 @@ export async function encapsulatePqc(mlkemPublicKey: Uint8Array): Promise<Encaps
 }
 
 export async function decapsulatePqc(
-  ciphertext:     Uint8Array,
+  ciphertext: Uint8Array,
   mlkemSecretKey: Uint8Array,
 ): Promise<Uint8Array> {
-  const ss  = ml_kem1024.decapsulate(ciphertext, mlkemSecretKey);
+  const ss = ml_kem1024.decapsulate(ciphertext, mlkemSecretKey);
   const key = await hkdfSHA384(ss, ciphertext.subarray(0, 32), PQC_INFO, 32);
   wipe(ss as Uint8Array);
   return key;
@@ -244,7 +258,7 @@ export async function decapsulatePqc(
 
 export interface P521EncapsulateResult {
   ephemeralPublicKey: Uint8Array; // 67 B compressed
-  sharedSecret:       Uint8Array; // 32 B
+  sharedSecret: Uint8Array; // 32 B
 }
 
 export async function encapsulateP521(p521PublicKey: Uint8Array): Promise<P521EncapsulateResult> {
@@ -258,7 +272,7 @@ export async function encapsulateP521(p521PublicKey: Uint8Array): Promise<P521En
 
 export async function decapsulateP521(
   ephemeralPublicKey: Uint8Array,
-  p521SecretKey:      Uint8Array,
+  p521SecretKey: Uint8Array,
 ): Promise<Uint8Array> {
   const sharedRaw = await ecdhP521(p521SecretKey, ephemeralPublicKey);
   const key = await hkdfSHA384(sharedRaw, ephemeralPublicKey, P521_INFO, 32);
@@ -271,11 +285,11 @@ export async function decapsulateP521(
 async function combineSecrets(
   mlkemSs: Uint8Array,
   p521Raw: Uint8Array,
-  ephPk:   Uint8Array,
+  ephPk: Uint8Array,
 ): Promise<Uint8Array> {
-  const ikm  = concat(mlkemSs, p521Raw);
+  const ikm = concat(mlkemSs, p521Raw);
   const info = new TextEncoder().encode('paranoia.ts v1 hybrid kem');
-  const key  = await hkdfSHA384(ikm, ephPk, info, 32);
+  const key = await hkdfSHA384(ikm, ephPk, info, 32);
   wipe(ikm);
   return key;
 }

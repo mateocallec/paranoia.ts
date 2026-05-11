@@ -40,30 +40,34 @@ export function concat(...arrays: Uint8Array[]): Uint8Array {
 
 /** Write a big-endian uint24 into `buf` at `offset`. */
 export function writeUint24BE(buf: Uint8Array, offset: number, value: number): void {
-  buf[offset]     = (value >>> 16) & 0xff;
-  buf[offset + 1] = (value >>> 8)  & 0xff;
-  buf[offset + 2] =  value         & 0xff;
+  buf[offset] = (value >>> 16) & 0xff;
+  buf[offset + 1] = (value >>> 8) & 0xff;
+  buf[offset + 2] = value & 0xff;
 }
 
 /** Read a big-endian uint24 from `buf` at `offset`. */
 export function readUint24BE(buf: Uint8Array, offset: number): number {
-  return ((buf[offset] as number) << 16) |
-         ((buf[offset + 1] as number) << 8) |
-          (buf[offset + 2] as number);
+  return (
+    ((buf[offset] as number) << 16) |
+    ((buf[offset + 1] as number) << 8) |
+    (buf[offset + 2] as number)
+  );
 }
 
 /** Write a big-endian uint32 into `buf` at `offset`. */
 export function writeUint32BE(buf: Uint8Array, offset: number, value: number): void {
-  buf[offset]     = (value >>> 24) & 0xff;
+  buf[offset] = (value >>> 24) & 0xff;
   buf[offset + 1] = (value >>> 16) & 0xff;
-  buf[offset + 2] = (value >>> 8)  & 0xff;
-  buf[offset + 3] =  value         & 0xff;
+  buf[offset + 2] = (value >>> 8) & 0xff;
+  buf[offset + 3] = value & 0xff;
 }
 
 /** Read a big-endian uint32 from `buf` at `offset`. */
 export function readUint32BE(buf: Uint8Array, offset: number): number {
-  return (((buf[offset] as number)     >>> 0) * 0x1000000) +
-          ((buf[offset + 1] as number) << 16) +
-          ((buf[offset + 2] as number) << 8)  +
-           (buf[offset + 3] as number);
+  return (
+    ((buf[offset] as number) >>> 0) * 0x1000000 +
+    ((buf[offset + 1] as number) << 16) +
+    ((buf[offset + 2] as number) << 8) +
+    (buf[offset + 3] as number)
+  );
 }

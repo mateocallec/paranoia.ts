@@ -7,7 +7,7 @@ ML-KEM-1024 (NIST FIPS 203) + P-521 ECDH + AES-256-GCM + Argon2id — built for 
 [![npm](https://img.shields.io/npm/v/paranoia-ts?style=flat-square&color=black)](https://www.npmjs.com/package/paranoia-ts)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black?style=flat-square)](https://github.com/mateocallec/paranoia.ts/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-black?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![FIPS 203](https://img.shields.io/badge/NIST-FIPS%20203%20(ML--KEM)-black?style=flat-square)](https://csrc.nist.gov/pubs/fips/203/final)
+[![FIPS 203](<https://img.shields.io/badge/NIST-FIPS%20203%20(ML--KEM)-black?style=flat-square>)](https://csrc.nist.gov/pubs/fips/203/final)
 
 > Full documentation and source: [github.com/mateocallec/paranoia.ts](https://github.com/mateocallec/paranoia.ts)
 
@@ -75,7 +75,7 @@ Derive a reproducible keypair from a master password using Argon2id + HKDF. The 
 import { deriveKeyPairFromMasterPassword, getSecureRandom } from 'paranoia-ts';
 
 // derivationNonce is a per-user random value stored server-side (public, like a salt)
-const nonce   = getSecureRandom(32);
+const nonce = getSecureRandom(32);
 const keyPair = await deriveKeyPairFromMasterPassword('master-password', 'username', nonce);
 ```
 
@@ -84,7 +84,13 @@ const keyPair = await deriveKeyPairFromMasterPassword('master-password', 'userna
 Store the encrypted keypair in IndexedDB and unlock it with a single biometric touch (Touch ID, Windows Hello, YubiKey). Requires a FIDO2 authenticator that supports the PRF extension.
 
 ```typescript
-import { registerWebAuthnPRF, getWebAuthnPRFKey, storeKeyPair, loadKeyPair, wipe } from 'paranoia-ts';
+import {
+  registerWebAuthnPRF,
+  getWebAuthnPRFKey,
+  storeKeyPair,
+  loadKeyPair,
+  wipe,
+} from 'paranoia-ts';
 
 // Registration — once per device
 const { credentialId, prfKey } = await registerWebAuthnPRF('user-id');
@@ -94,8 +100,8 @@ wipe(prfKey);
 
 // Unlock — one biometric touch on every page load
 const credId = Uint8Array.from(atob(localStorage.getItem('cred')!), c => c.charCodeAt(0));
-const prf    = await getWebAuthnPRFKey(credId);
-const kp     = await loadKeyPair(prf, 'my-keypair');
+const prf = await getWebAuthnPRFKey(credId);
+const kp = await loadKeyPair(prf, 'my-keypair');
 wipe(prf);
 ```
 
@@ -120,43 +126,53 @@ stream.getTracks().forEach(t => t.stop());
 
 ### Class `Paranoia`
 
-| Method | Description |
-|---|---|
-| `generateKeyPair()` | Generate hybrid ML-KEM-1024 + P-521 keypair |
-| `seal(data, passphrase, opts?)` | Passphrase encrypt (Argon2id + AES-256-GCM) |
-| `unseal(sealed, passphrase)` | Passphrase decrypt |
-| `sealTo(data, pubKey)` | Hybrid KEM encrypt to public key |
-| `unsealWith(sealed, keyPair)` | Hybrid KEM decrypt |
-| `enableWebcamEntropy(stream)` | Mix webcam noise into CSPRNG pool |
-| `disableWebcamEntropy()` | Stop and wipe webcam pool |
-| `storeKeyPair(kp, wrappingKey, id?)` | Encrypt keypair to IndexedDB |
-| `loadKeyPair(wrappingKey, id?)` | Load keypair from IndexedDB |
-| `wipe(...buffers)` | Zero-fill sensitive `Uint8Array` buffers |
-| `random(n)` | Return `n` bytes of secure random data |
+| Method                               | Description                                 |
+| ------------------------------------ | ------------------------------------------- |
+| `generateKeyPair()`                  | Generate hybrid ML-KEM-1024 + P-521 keypair |
+| `seal(data, passphrase, opts?)`      | Passphrase encrypt (Argon2id + AES-256-GCM) |
+| `unseal(sealed, passphrase)`         | Passphrase decrypt                          |
+| `sealTo(data, pubKey)`               | Hybrid KEM encrypt to public key            |
+| `unsealWith(sealed, keyPair)`        | Hybrid KEM decrypt                          |
+| `enableWebcamEntropy(stream)`        | Mix webcam noise into CSPRNG pool           |
+| `disableWebcamEntropy()`             | Stop and wipe webcam pool                   |
+| `storeKeyPair(kp, wrappingKey, id?)` | Encrypt keypair to IndexedDB                |
+| `loadKeyPair(wrappingKey, id?)`      | Load keypair from IndexedDB                 |
+| `wipe(...buffers)`                   | Zero-fill sensitive `Uint8Array` buffers    |
+| `random(n)`                          | Return `n` bytes of secure random data      |
 
 ### Standalone exports
 
 ```typescript
 import {
   // KEM
-  hybridEncapsulate, hybridDecapsulate,
-  encapsulatePqc,   decapsulatePqc,
-  encapsulateP521,  decapsulateP521,
+  hybridEncapsulate,
+  hybridDecapsulate,
+  encapsulatePqc,
+  decapsulatePqc,
+  encapsulateP521,
+  decapsulateP521,
   // KDF
   deriveKey,
   deriveKeyPairFromMasterPassword,
   deriveKeyPairAndWrapKey,
   // AES
-  aesGcmEncrypt, aesGcmDecrypt,
+  aesGcmEncrypt,
+  aesGcmDecrypt,
   // Entropy
-  getSecureRandom, injectEntropy,
-  enableWebcamEntropy, disableWebcamEntropy,
+  getSecureRandom,
+  injectEntropy,
+  enableWebcamEntropy,
+  disableWebcamEntropy,
   // Memory
-  wipe, constantTimeEqual,
+  wipe,
+  constantTimeEqual,
   // WebAuthn
-  registerWebAuthnPRF, getWebAuthnPRFKey,
+  registerWebAuthnPRF,
+  getWebAuthnPRFKey,
   // Storage
-  storeKeyPair, loadKeyPair, deleteKeyPair,
+  storeKeyPair,
+  loadKeyPair,
+  deleteKeyPair,
 } from 'paranoia-ts';
 ```
 

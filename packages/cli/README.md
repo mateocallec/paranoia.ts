@@ -30,13 +30,13 @@ paranoia keygen [options]
 
 Derives a hybrid keypair from a master passphrase via Argon2id and saves it to `keys.json`. The private key is encrypted — the passphrase is never stored.
 
-| Option | Description |
-|---|---|
-| `--both` | ML-KEM-1024 + P-521 hybrid (default) |
-| `--pqc` | ML-KEM-1024 only |
-| `--trad` | P-521 only |
-| `--webcam` | Mix webcam pixel noise into the derivation nonce (requires ffmpeg) |
-| `-o, --output <path>` | Output path (default: `keys.json`) |
+| Option                | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| `--both`              | ML-KEM-1024 + P-521 hybrid (default)                               |
+| `--pqc`               | ML-KEM-1024 only                                                   |
+| `--trad`              | P-521 only                                                         |
+| `--webcam`            | Mix webcam pixel noise into the derivation nonce (requires ffmpeg) |
+| `-o, --output <path>` | Output path (default: `keys.json`)                                 |
 
 ```bash
 paranoia keygen                          # hybrid, interactive passphrase prompt
@@ -53,13 +53,14 @@ paranoia seal <file> [options]
 ```
 
 Encrypts a file to a `.para` container. The algorithm is **auto-detected** from the keys in `keys.json`:
+
 - Both keys present → **Hybrid** (ML-KEM-1024 + P-521)
 - ML-KEM key only → **PQC-only**
 - P-521 key only → **Classical ECDH**
 
-| Option | Description |
-|---|---|
-| `-k, --keys <path>` | Path to keys.json (default: `keys.json`) |
+| Option                | Description                                  |
+| --------------------- | -------------------------------------------- |
+| `-k, --keys <path>`   | Path to keys.json (default: `keys.json`)     |
 | `-o, --output <path>` | Output `.para` path (default: `<file>.para`) |
 
 ```bash
@@ -77,9 +78,9 @@ paranoia open <file> [options]
 
 Decrypts a `.para` file. You will be prompted for the master passphrase to unlock the private key.
 
-| Option | Description |
-|---|---|
-| `-k, --keys <path>` | Path to keys.json (default: `keys.json`) |
+| Option                | Description                                                           |
+| --------------------- | --------------------------------------------------------------------- |
+| `-k, --keys <path>`   | Path to keys.json (default: `keys.json`)                              |
 | `-o, --output <path>` | Output file path (default: original filename from the `.para` header) |
 
 ```bash
@@ -97,10 +98,10 @@ paranoia entropy <bytes> [options]
 
 Outputs `<bytes>` bytes of cryptographically secure entropy as a hex string.
 
-| Option | Description |
-|---|---|
-| `--webcam` | Mix webcam pixel noise via HMAC-SHA3-256 (additive, requires ffmpeg) |
-| `-o, --output <path>` | Write to file instead of stdout |
+| Option                | Description                                                          |
+| --------------------- | -------------------------------------------------------------------- |
+| `--webcam`            | Mix webcam pixel noise via HMAC-SHA3-256 (additive, requires ffmpeg) |
+| `-o, --output <path>` | Write to file instead of stdout                                      |
 
 ```bash
 paranoia entropy 32                      # 32 bytes → hex on stdout
@@ -134,12 +135,12 @@ Mode values: `0x01` = PQC-only, `0x02` = P-521-only, `0x03` = Hybrid.
   "derivationNonce": "<base64>",
   "public": {
     "mlkem": "<base64 — 1568 bytes>",
-    "p521":  "<base64 — 67 bytes>"
+    "p521": "<base64 — 67 bytes>"
   },
   "private": {
     "algorithm": "argon2id-aes256gcm",
     "argon2": { "iterations": 5, "memoryKiB": 524288, "parallelism": 4 },
-    "nonce":      "<base64>",
+    "nonce": "<base64>",
     "ciphertext": "<base64>"
   }
 }
@@ -151,7 +152,7 @@ The private key material is AES-256-GCM encrypted with a key derived from the ma
 
 ## Webcam entropy (Linux / macOS / Windows)
 
-When `--webcam` is passed, the CLI captures 8 frames from the default camera via ffmpeg, hashes the pixel data with SHA-3-256, and mixes the result into the system CSPRNG via HMAC-SHA3-256. The output entropy can only be *stronger* than the base CSPRNG — webcam data cannot reduce it.
+When `--webcam` is passed, the CLI captures 8 frames from the default camera via ffmpeg, hashes the pixel data with SHA-3-256, and mixes the result into the system CSPRNG via HMAC-SHA3-256. The output entropy can only be _stronger_ than the base CSPRNG — webcam data cannot reduce it.
 
 ---
 

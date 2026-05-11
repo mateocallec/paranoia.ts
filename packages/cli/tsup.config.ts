@@ -2,15 +2,15 @@ import { defineConfig } from 'tsup';
 import { resolve } from 'path';
 
 export default defineConfig({
-  entry:    ['src/index.ts'],
-  outDir:   'dist',
-  format:   ['cjs'],
+  entry: ['src/index.ts'],
+  outDir: 'dist',
+  format: ['cjs'],
   platform: 'node',
-  target:   'node18',
-  bundle:   true,
+  target: 'node18',
+  bundle: true,
   sourcemap: true,
-  clean:    true,
-  banner:   { js: '#!/usr/bin/env node' },
+  clean: true,
+  banner: { js: '#!/usr/bin/env node' },
   noExternal: [/^(?!node:).*/],
   esbuildOptions(opts) {
     opts.alias = {

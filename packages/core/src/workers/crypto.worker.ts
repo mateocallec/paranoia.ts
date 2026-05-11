@@ -19,15 +19,13 @@ const ctx = self as unknown as WorkerSelf;
 const paranoia = new Paranoia();
 
 type Req =
-  | { id: string; op: 'seal';       data: Uint8Array; passphrase: string; options?: object }
-  | { id: string; op: 'unseal';     sealed: Uint8Array; passphrase: string }
-  | { id: string; op: 'sealTo';     data: Uint8Array; pubKey: object }
+  | { id: string; op: 'seal'; data: Uint8Array; passphrase: string; options?: object }
+  | { id: string; op: 'unseal'; sealed: Uint8Array; passphrase: string }
+  | { id: string; op: 'sealTo'; data: Uint8Array; pubKey: object }
   | { id: string; op: 'unsealWith'; sealed: Uint8Array; keyPair: object }
   | { id: string; op: 'generateKeyPair' };
 
-type Res =
-  | { id: string; ok: true;  result: unknown }
-  | { id: string; ok: false; error: string };
+type Res = { id: string; ok: true; result: unknown } | { id: string; ok: false; error: string };
 
 function transfer(u: Uint8Array): ArrayBuffer {
   return u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;

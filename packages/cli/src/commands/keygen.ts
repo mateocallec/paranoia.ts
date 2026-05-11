@@ -7,25 +7,33 @@ import { buildKeysJson, saveKeys, type KeyAlgorithm } from '../lib/keys.js';
 import { askPassphraseConfirmed, askConfirm, bail } from '../lib/ui.js';
 import { harvestWebcamEntropy, ffmpegAvailable } from '../lib/webcam.js';
 
-interface KeygenOptions { pqc: boolean; trad: boolean; output: string; webcam: boolean }
+interface KeygenOptions {
+  pqc: boolean;
+  trad: boolean;
+  output: string;
+  webcam: boolean;
+}
 
 const LABEL: Record<KeyAlgorithm, string> = {
   'hybrid-mlkem1024-p521': 'Hybrid ML-KEM-1024 + P-521',
-  'pqc-mlkem1024':         'ML-KEM-1024 only',
-  'classical-p521':        'P-521 only',
+  'pqc-mlkem1024': 'ML-KEM-1024 only',
+  'classical-p521': 'P-521 only',
 };
 
 export async function keygenCommand(opts: KeygenOptions): Promise<void> {
   clack.intro(pc.bold('paranoia keygen'));
 
-  const algo: KeyAlgorithm = opts.pqc && !opts.trad ? 'pqc-mlkem1024'
-    : opts.trad && !opts.pqc                         ? 'classical-p521'
-    :                                                  'hybrid-mlkem1024-p521';
+  const algo: KeyAlgorithm =
+    opts.pqc && !opts.trad
+      ? 'pqc-mlkem1024'
+      : opts.trad && !opts.pqc
+        ? 'classical-p521'
+        : 'hybrid-mlkem1024-p521';
 
   clack.log.info(`Algorithm : ${pc.cyan(LABEL[algo])}`);
 
   const outPath = pathResolve(opts.output);
-  if (existsSync(outPath) && !await askConfirm(`${outPath} already exists. Overwrite?`, false))
+  if (existsSync(outPath) && !(await askConfirm(`${outPath} already exists. Overwrite?`, false)))
     bail();
 
   // ── Webcam TRNG (optional, additive) ─────────────────────────────────────
@@ -47,9 +55,8 @@ export async function keygenCommand(opts: KeygenOptions): Promise<void> {
 
   // ── Derivation nonce = CSPRNG XOR webcam digest ───────────────────────────
   const sysNonce = getSecureRandom(32);
-  const nonce    = new Uint8Array(32);
-  for (let i = 0; i < 32; i++)
-    nonce[i] = (sysNonce[i] as number) ^ ((webcamDigest?.[i] ?? 0));
+  const nonce = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) nonce[i] = (sysNonce[i] as number) ^ (webcamDigest?.[i] ?? 0);
   wipe(sysNonce);
   if (webcamDigest) wipe(webcamDigest);
 
@@ -61,7 +68,12 @@ export async function keygenCommand(opts: KeygenOptions): Promise<void> {
   s.start(`Deriving keypair via Argon2id (${STRONG_ARGON2_PARAMS.memory / 1024} MB)…`);
 
   try {
-    const { keysJson, keyPair } = await buildKeysJson(algo, passphrase, nonce, STRONG_ARGON2_PARAMS);
+    const { keysJson, keyPair } = await buildKeysJson(
+      algo,
+      passphrase,
+      nonce,
+      STRONG_ARGON2_PARAMS,
+    );
     wipe(keyPair.privateKey.mlkem, keyPair.privateKey.p521);
     saveKeys(outPath, keysJson);
 
@@ -70,9 +82,11 @@ export async function keygenCommand(opts: KeygenOptions): Promise<void> {
       [
         `Algorithm : ${LABEL[algo]}`,
         keysJson.public.mlkem ? `ML-KEM pk  : ${keysJson.public.mlkem.slice(0, 32)}…` : '',
-        keysJson.public.p521  ? `P-521  pk  : ${keysJson.public.p521.slice(0, 32)}…`  : '',
+        keysJson.public.p521 ? `P-521  pk  : ${keysJson.public.p521.slice(0, 32)}…` : '',
         `File      : ${outPath}`,
-      ].filter(Boolean).join('\n'),
+      ]
+        .filter(Boolean)
+        .join('\n'),
       'Keys saved',
     );
     clack.outro(pc.green('✓ keys.json written.'));

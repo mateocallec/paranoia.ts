@@ -8,10 +8,12 @@
     "packages/cli"
   ],
   "scripts": {
-    "build":     "npm run build -w paranoia-ts && npm run build -w paranoia-cli",
-    "build:lib": "npm run build -w paranoia-ts",
-    "build:cli": "npm run build -w paranoia-cli",
-    "typecheck": "npm run typecheck -w paranoia-ts && npm run typecheck -w paranoia-cli"
+    "build":          "npm run build -w paranoia-ts && npm run build -w paranoia-cli",
+    "build:lib":      "npm run build -w paranoia-ts",
+    "build:cli":      "npm run build -w paranoia-cli",
+    "typecheck":      "npm run typecheck -w paranoia-ts && npm run typecheck -w paranoia-cli",
+    "format":         "prettier --write \"packages/**/*.{ts,json,md}\"",
+    "format:check":   "prettier --check \"packages/**/*.{ts,json,md}\""
   },
   "keywords": [
     "post-quantum",
@@ -36,5 +38,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
   }
 }

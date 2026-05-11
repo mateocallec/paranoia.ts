@@ -67,7 +67,7 @@ export const SIZES = {
   MODE: 1,
   ARGON2_SALT: 32,
   ARGON2_ITERATIONS: 3, // big-endian uint24
-  ARGON2_MEMORY: 4,     // big-endian uint32
+  ARGON2_MEMORY: 4, // big-endian uint32
   ARGON2_PARALLELISM: 1,
   NONCE: 12,
   AUTH_TAG: 16,
@@ -81,8 +81,12 @@ export const SIZES = {
 
 // Passphrase packet header size (before ciphertext)
 export const PASSPHRASE_HEADER_SIZE =
-  SIZES.VERSION + SIZES.MODE + SIZES.ARGON2_SALT +
-  SIZES.ARGON2_ITERATIONS + SIZES.ARGON2_MEMORY + SIZES.ARGON2_PARALLELISM +
+  SIZES.VERSION +
+  SIZES.MODE +
+  SIZES.ARGON2_SALT +
+  SIZES.ARGON2_ITERATIONS +
+  SIZES.ARGON2_MEMORY +
+  SIZES.ARGON2_PARALLELISM +
   SIZES.NONCE;
 
 // Asymmetric packet header size (before ciphertext)

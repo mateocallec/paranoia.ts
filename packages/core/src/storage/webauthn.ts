@@ -16,27 +16,27 @@ function rpId(): string {
  * User verification is required so biometrics / PIN must pass.
  */
 export async function registerWebAuthnCredential(userId: string): Promise<WebAuthnCredential> {
-  const challenge    = new Uint8Array(32);
-  const userIdBytes  = new TextEncoder().encode(userId);
+  const challenge = new Uint8Array(32);
+  const userIdBytes = new TextEncoder().encode(userId);
   crypto.getRandomValues(challenge);
 
-  const credential = await navigator.credentials.create({
+  const credential = (await navigator.credentials.create({
     publicKey: {
       challenge,
       rp: { id: rpId(), name: 'paranoia.ts' },
       user: { id: userIdBytes, name: userId, displayName: userId },
       pubKeyCredParams: [
-        { type: 'public-key', alg: -7   }, // ES256
+        { type: 'public-key', alg: -7 }, // ES256
         { type: 'public-key', alg: -257 }, // RS256
       ],
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
-        userVerification:        'required',
-        residentKey:             'required',
+        userVerification: 'required',
+        residentKey: 'required',
       },
       timeout: 60_000,
     },
-  }) as PublicKeyCredential | null;
+  })) as PublicKeyCredential | null;
 
   if (!credential) throw new Error('WebAuthn credential creation was cancelled or failed');
 
@@ -58,28 +58,37 @@ export async function deriveWebAuthnWrappingKey(credentialId: Uint8Array): Promi
   const challenge = new Uint8Array(32);
   crypto.getRandomValues(challenge);
 
-  const assertion = await navigator.credentials.get({
+  const assertion = (await navigator.credentials.get({
     publicKey: {
       challenge,
       rpId: rpId(),
-      allowCredentials: [{ type: 'public-key', id: credentialId.buffer.slice(credentialId.byteOffset, credentialId.byteOffset + credentialId.byteLength) as ArrayBuffer }],
+      allowCredentials: [
+        {
+          type: 'public-key',
+          id: credentialId.buffer.slice(
+            credentialId.byteOffset,
+            credentialId.byteOffset + credentialId.byteLength,
+          ) as ArrayBuffer,
+        },
+      ],
       userVerification: 'required',
       timeout: 60_000,
     },
-  }) as PublicKeyCredential | null;
+  })) as PublicKeyCredential | null;
 
   if (!assertion) throw new Error('WebAuthn assertion was cancelled or failed');
 
   const resp = assertion.response as AuthenticatorAssertionResponse;
   const authData = new Uint8Array(resp.authenticatorData);
-  const sig      = new Uint8Array(resp.signature);
+  const sig = new Uint8Array(resp.signature);
 
   // IKM = authData || sig  (both are session-unique when UP/UV bits are set)
   const ikm = new Uint8Array(authData.length + sig.length);
   ikm.set(authData);
   ikm.set(sig, authData.length);
 
-  const toAB = (u: Uint8Array) => u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;
+  const toAB = (u: Uint8Array) =>
+    u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;
   const baseKey = await crypto.subtle.importKey('raw', toAB(ikm), 'HKDF', false, ['deriveKey']);
   wipe(ikm); // L1: wipe authenticator signature material immediately after importKey
   const wrappingCryptoKey = await crypto.subtle.deriveKey(
@@ -105,7 +114,7 @@ export async function deriveWebAuthnWrappingKey(credentialId: Uint8Array): Promi
 // Requires a platform authenticator (Touch ID, Windows Hello, Android biometrics).
 
 type PRFExtOutput = { prf?: { results?: { first?: ArrayBuffer } } };
-type PRFExtInput  = { prf: { eval: { first: BufferSource } } };
+type PRFExtInput = { prf: { eval: { first: BufferSource } } };
 
 function toAB(u: Uint8Array): ArrayBuffer {
   return u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;
@@ -122,19 +131,19 @@ function toAB(u: Uint8Array): ArrayBuffer {
  */
 export async function registerWebAuthnPRF(userId: string): Promise<{
   credentialId: Uint8Array;
-  prfKey:       Uint8Array;
+  prfKey: Uint8Array;
 }> {
-  const challenge   = new Uint8Array(32);
+  const challenge = new Uint8Array(32);
   const userIdBytes = new TextEncoder().encode(userId);
   crypto.getRandomValues(challenge);
 
-  const cred = await navigator.credentials.create({
+  const cred = (await navigator.credentials.create({
     publicKey: {
       challenge,
       rp: { id: rpId(), name: 'paranoia.ts' },
       user: { id: userIdBytes, name: userId, displayName: userId },
       pubKeyCredParams: [
-        { type: 'public-key', alg: -7   }, // ES256
+        { type: 'public-key', alg: -7 }, // ES256
         { type: 'public-key', alg: -257 }, // RS256
       ],
       authenticatorSelection: {
@@ -142,12 +151,12 @@ export async function registerWebAuthnPRF(userId: string): Promise<{
         // authenticators (Touch ID, Windows Hello) and roaming authenticators
         // (YubiKey and other FIDO2 security keys).
         userVerification: 'required',
-        residentKey:      'preferred',
+        residentKey: 'preferred',
       },
       extensions: { prf: { eval: { first: PRF_EVAL_INPUT } } } as unknown as PRFExtInput,
       timeout: 60_000,
     },
-  }) as PublicKeyCredential | null;
+  })) as PublicKeyCredential | null;
 
   if (!cred) throw new Error('WebAuthn credential creation was cancelled');
 
@@ -157,14 +166,14 @@ export async function registerWebAuthnPRF(userId: string): Promise<{
   if (!prfBuf) {
     throw new Error(
       'This authenticator does not support the PRF extension. ' +
-      'Try a FIDO2 security key (YubiKey 5+) or a platform authenticator ' +
-      '(Touch ID, Windows Hello, Android biometrics).',
+        'Try a FIDO2 security key (YubiKey 5+) or a platform authenticator ' +
+        '(Touch ID, Windows Hello, Android biometrics).',
     );
   }
 
   return {
     credentialId: new Uint8Array(cred.rawId),
-    prfKey:       new Uint8Array(prfBuf),
+    prfKey: new Uint8Array(prfBuf),
   };
 }
 
@@ -178,7 +187,7 @@ export async function getWebAuthnPRFKey(credentialId: Uint8Array): Promise<Uint8
   const challenge = new Uint8Array(32);
   crypto.getRandomValues(challenge);
 
-  const assertion = await navigator.credentials.get({
+  const assertion = (await navigator.credentials.get({
     publicKey: {
       challenge,
       rpId: rpId(),
@@ -187,7 +196,7 @@ export async function getWebAuthnPRFKey(credentialId: Uint8Array): Promise<Uint8
       extensions: { prf: { eval: { first: PRF_EVAL_INPUT } } } as unknown as PRFExtInput,
       timeout: 60_000,
     },
-  }) as PublicKeyCredential | null;
+  })) as PublicKeyCredential | null;
 
   if (!assertion) throw new Error('WebAuthn authentication was cancelled');
 
@@ -197,7 +206,7 @@ export async function getWebAuthnPRFKey(credentialId: Uint8Array): Promise<Uint8
   if (!prfBuf) {
     throw new Error(
       'PRF output not available. ' +
-      'Your authenticator may not support this feature, or registration was done on a different device.',
+        'Your authenticator may not support this feature, or registration was done on a different device.',
     );
   }
 

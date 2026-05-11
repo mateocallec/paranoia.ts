@@ -8,7 +8,8 @@
  */
 
 // TypeScript 5.5+ made Uint8Array generic; SubtleCrypto needs ArrayBuffer-backed views.
-const b = (u: Uint8Array): ArrayBuffer => u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;
+const b = (u: Uint8Array): ArrayBuffer =>
+  u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;
 
 export async function aesGcmEncrypt(
   plaintext: Uint8Array,
@@ -16,12 +17,12 @@ export async function aesGcmEncrypt(
   nonce: Uint8Array,
   aad?: Uint8Array,
 ): Promise<Uint8Array> {
-  if (key.length !== 32)   throw new Error('AES-256-GCM requires a 32-byte key');
+  if (key.length !== 32) throw new Error('AES-256-GCM requires a 32-byte key');
   if (nonce.length !== 12) throw new Error('AES-GCM requires a 12-byte nonce');
 
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw', b(key), { name: 'AES-GCM' }, false, ['encrypt'],
-  );
+  const cryptoKey = await crypto.subtle.importKey('raw', b(key), { name: 'AES-GCM' }, false, [
+    'encrypt',
+  ]);
 
   const params: AesGcmParams = { name: 'AES-GCM', iv: b(nonce), tagLength: 128 };
   if (aad !== undefined) params.additionalData = b(aad);
@@ -36,12 +37,12 @@ export async function aesGcmDecrypt(
   nonce: Uint8Array,
   aad?: Uint8Array,
 ): Promise<Uint8Array> {
-  if (key.length !== 32)   throw new Error('AES-256-GCM requires a 32-byte key');
+  if (key.length !== 32) throw new Error('AES-256-GCM requires a 32-byte key');
   if (nonce.length !== 12) throw new Error('AES-GCM requires a 12-byte nonce');
 
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw', b(key), { name: 'AES-GCM' }, false, ['decrypt'],
-  );
+  const cryptoKey = await crypto.subtle.importKey('raw', b(key), { name: 'AES-GCM' }, false, [
+    'decrypt',
+  ]);
 
   const params: AesGcmParams = { name: 'AES-GCM', iv: b(nonce), tagLength: 128 };
   if (aad !== undefined) params.additionalData = b(aad);

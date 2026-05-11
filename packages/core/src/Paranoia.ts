@@ -1,15 +1,33 @@
-import { getSecureRandom, enableWebcamEntropy, disableWebcamEntropy, isWebcamEntropyActive } from './core/entropy';
+import {
+  getSecureRandom,
+  enableWebcamEntropy,
+  disableWebcamEntropy,
+  isWebcamEntropyActive,
+} from './core/entropy';
 import { deriveKey } from './core/kdf';
 import { generateHybridKeyPair, hybridEncapsulate, hybridDecapsulate } from './core/kem';
 import { aesGcmEncrypt, aesGcmDecrypt } from './core/symmetric';
-import { wipe, concat, writeUint24BE, writeUint32BE, readUint24BE, readUint32BE } from './core/memory';
+import {
+  wipe,
+  concat,
+  writeUint24BE,
+  writeUint32BE,
+  readUint24BE,
+  readUint32BE,
+} from './core/memory';
 import { storeKeyPair, loadKeyPair, deleteKeyPair, SessionKeyStore } from './storage/indexeddb';
 import { registerWebAuthnCredential, deriveWebAuthnWrappingKey } from './storage/webauthn';
 import {
-  PACKET_VERSION, MODE_PASSPHRASE, MODE_ASYMMETRIC,
-  DEFAULT_ARGON2_PARAMS, SIZES,
-  type HybridKeyPair, type HybridPublicKey, type WebAuthnCredential,
-  type SealOptions, type Argon2Params,
+  PACKET_VERSION,
+  MODE_PASSPHRASE,
+  MODE_ASYMMETRIC,
+  DEFAULT_ARGON2_PARAMS,
+  SIZES,
+  type HybridKeyPair,
+  type HybridPublicKey,
+  type WebAuthnCredential,
+  type SealOptions,
+  type Argon2Params,
 } from './types';
 
 // ─── AAD helpers ─────────────────────────────────────────────────────────────
@@ -39,7 +57,10 @@ async function buildRecipientAAD(pubKey: HybridPublicKey): Promise<Uint8Array> {
   const combined = concat(pubKey.mlkem, pubKey.p521);
   const hash = await crypto.subtle.digest(
     'SHA-256',
-    combined.buffer.slice(combined.byteOffset, combined.byteOffset + combined.byteLength) as ArrayBuffer,
+    combined.buffer.slice(
+      combined.byteOffset,
+      combined.byteOffset + combined.byteLength,
+    ) as ArrayBuffer,
   );
   return new Uint8Array(hash);
 }
@@ -86,11 +107,11 @@ function decodePassphrasePacket(packet: Uint8Array): {
   return {
     salt: packet.slice(2, 34),
     params: {
-      iterations:  readUint24BE(packet, 34),
-      memory:      readUint32BE(packet, 37),
+      iterations: readUint24BE(packet, 34),
+      memory: readUint32BE(packet, 37),
       parallelism: packet[41] as number,
     },
-    nonce:      packet.slice(42, 54),
+    nonce: packet.slice(42, 54),
     ciphertext: packet.slice(54),
   };
 }
@@ -129,8 +150,8 @@ function decodeAsymmetricPacket(packet: Uint8Array): {
   if (packet.length < ASYM_HDR + 16 + 1) throw new Error('Asymmetric packet too short');
   const kemCtEnd = 2 + SIZES.MLKEM_CT + SIZES.P521_EPH_PK;
   return {
-    kemCt:      packet.slice(2, kemCtEnd),
-    nonce:      packet.slice(kemCtEnd, kemCtEnd + SIZES.NONCE),
+    kemCt: packet.slice(2, kemCtEnd),
+    nonce: packet.slice(kemCtEnd, kemCtEnd + SIZES.NONCE),
     ciphertext: packet.slice(kemCtEnd + SIZES.NONCE),
   };
 }
@@ -178,13 +199,9 @@ export class Paranoia {
    * AES-256 provides 128-bit post-quantum security (Grover halves key length;
    * 256/2 = 128 bits classical equivalent).
    */
-  async seal(
-    data: Uint8Array,
-    passphrase: string,
-    options?: SealOptions,
-  ): Promise<Uint8Array> {
+  async seal(data: Uint8Array, passphrase: string, options?: SealOptions): Promise<Uint8Array> {
     const params: Argon2Params = { ...DEFAULT_ARGON2_PARAMS, ...options?.argon2 };
-    const salt  = getSecureRandom(SIZES.ARGON2_SALT);
+    const salt = getSecureRandom(SIZES.ARGON2_SALT);
     const nonce = getSecureRandom(SIZES.NONCE);
 
     // Build header prefix used as AAD — authenticates the Argon2 cost params so
@@ -209,9 +226,9 @@ export class Paranoia {
     const { salt, params, nonce, ciphertext } = decodePassphrasePacket(sealed);
 
     // Validate before running Argon2 — prevents resource-exhaustion via crafted header
-    if (params.iterations  < 1 || params.iterations  > 1_000)
+    if (params.iterations < 1 || params.iterations > 1_000)
       throw new Error('Invalid Argon2id iterations in packet (1–1000 allowed)');
-    if (params.memory      < 8 || params.memory      > 4_194_304)
+    if (params.memory < 8 || params.memory > 4_194_304)
       throw new Error('Invalid Argon2id memory in packet (8 KiB–4 GiB allowed)');
     if (params.parallelism < 1 || params.parallelism > 64)
       throw new Error('Invalid Argon2id parallelism in packet (1–64 allowed)');
@@ -263,7 +280,7 @@ export class Paranoia {
     const aad = await buildRecipientAAD(keyPair.publicKey);
 
     const sharedSecret = await hybridDecapsulate(kemCt, keyPair.privateKey);
-    const plaintext    = await aesGcmDecrypt(ciphertext, sharedSecret, nonce, aad);
+    const plaintext = await aesGcmDecrypt(ciphertext, sharedSecret, nonce, aad);
     wipe(sharedSecret);
 
     return plaintext;
@@ -275,11 +292,7 @@ export class Paranoia {
    * Encrypt `keyPair` with `wrappingKey` and persist in IndexedDB.
    * Obtain `wrappingKey` via `getWebAuthnWrappingKey()` for hardware backing.
    */
-  async storeKeyPair(
-    keyPair: HybridKeyPair,
-    wrappingKey: Uint8Array,
-    id?: string,
-  ): Promise<void> {
+  async storeKeyPair(keyPair: HybridKeyPair, wrappingKey: Uint8Array, id?: string): Promise<void> {
     return storeKeyPair(keyPair, wrappingKey, id);
   }
 

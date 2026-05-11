@@ -11,7 +11,7 @@ export async function askPassphrase(message: string): Promise<string> {
 
 export async function askPassphraseConfirmed(message: string): Promise<string> {
   while (true) {
-    const pass    = await clack.password({ message });
+    const pass = await clack.password({ message });
     if (clack.isCancel(pass)) bail();
     const confirm = await clack.password({ message: 'Confirm passphrase:' });
     if (clack.isCancel(confirm)) bail();

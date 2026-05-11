@@ -56,7 +56,7 @@ export async function harvestWebcamEntropy(stream: MediaStream): Promise<Uint8Ar
       video.play().catch(reject);
 
       const FRAMES = 8;
-      const W = Math.min(video.videoWidth  || 64, 64);
+      const W = Math.min(video.videoWidth || 64, 64);
       const H = Math.min(video.videoHeight || 64, 64);
       const frames: Uint8Array[] = [];
 
@@ -65,7 +65,10 @@ export async function harvestWebcamEntropy(stream: MediaStream): Promise<Uint8Ar
         canvas.width = W;
         canvas.height = H;
         const ctx = canvas.getContext('2d');
-        if (!ctx) { reject(new Error('Canvas 2D unavailable')); return; }
+        if (!ctx) {
+          reject(new Error('Canvas 2D unavailable'));
+          return;
+        }
         ctx.drawImage(video, 0, 0, W, H);
         frames.push(new Uint8Array(ctx.getImageData(0, 0, W, H).data.buffer));
 
@@ -142,14 +145,12 @@ export function injectEntropy(entropy: Uint8Array): void {
   const sys = new Uint8Array(32);
   crypto.getRandomValues(sys);
   // L2: concatenated key is a separate buffer that must be wiped after HMAC
-  const key = webcamPool !== null
-    ? new Uint8Array([...webcamPool, ...sys])
-    : sys;
+  const key = webcamPool !== null ? new Uint8Array([...webcamPool, ...sys]) : sys;
   const newPool = hmac(sha3_256, key, entropy);
   if (webcamPool) wipe(webcamPool);
   if (key !== sys) wipe(key); // wipe the concatenated buffer (not when key === sys)
   wipe(sys);
-  webcamPool   = newPool;
+  webcamPool = newPool;
   webcamActive = true;
 }
 

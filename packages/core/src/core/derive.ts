@@ -21,7 +21,7 @@ import { wipe } from './memory';
 import { STRONG_ARGON2_PARAMS, type Argon2Params, type HybridKeyPair } from '../types';
 
 const ENC = new TextEncoder();
-const KDF_INFO  = ENC.encode('paranoia.ts:v1:keypair-expansion');
+const KDF_INFO = ENC.encode('paranoia.ts:v1:keypair-expansion');
 const P521_INFO = ENC.encode('paranoia.ts:v1:p521-sk');
 
 // ─── Internal: expand a 32-byte seed → full HybridKeyPair via HKDF-SHA384 ────
@@ -60,7 +60,7 @@ async function expandKeypairFromSeed(seed: Uint8Array, salt: Uint8Array): Promis
   if (!p521Sk) throw new Error('P-521 key derivation exhausted 256 attempts — internal error');
 
   return {
-    publicKey:  { mlkem: mlkemPk, p521: p521.getPublicKey(p521Sk, true) },
+    publicKey: { mlkem: mlkemPk, p521: p521.getPublicKey(p521Sk, true) },
     privateKey: { mlkem: mlkemSk, p521: p521Sk },
   };
 }
@@ -88,10 +88,15 @@ export async function deriveKeyPairFromMasterPassword(
   new DataView(saltInput.buffer).setUint32(0, usernameBytes.length, false);
   saltInput.set(usernameBytes, 4);
   saltInput.set(derivationNonce, 4 + usernameBytes.length);
-  const salt = new Uint8Array(await crypto.subtle.digest(
-    'SHA-256',
-    saltInput.buffer.slice(saltInput.byteOffset, saltInput.byteOffset + saltInput.byteLength) as ArrayBuffer,
-  ));
+  const salt = new Uint8Array(
+    await crypto.subtle.digest(
+      'SHA-256',
+      saltInput.buffer.slice(
+        saltInput.byteOffset,
+        saltInput.byteOffset + saltInput.byteLength,
+      ) as ArrayBuffer,
+    ),
+  );
 
   const seed = await deriveKey(masterPassword, salt, { ...STRONG_ARGON2_PARAMS, ...params });
   const keyPair = await expandKeypairFromSeed(seed, salt);
@@ -115,12 +120,18 @@ export async function deriveKeyPairAndWrapKey(
   derivationNonce: Uint8Array,
   params?: Partial<Argon2Params>,
 ): Promise<{ keyPair: HybridKeyPair; wrapKey: Uint8Array }> {
-  const saltBuf = await crypto.subtle.digest('SHA-256', derivationNonce.buffer.slice(derivationNonce.byteOffset, derivationNonce.byteOffset + derivationNonce.byteLength) as ArrayBuffer);
+  const saltBuf = await crypto.subtle.digest(
+    'SHA-256',
+    derivationNonce.buffer.slice(
+      derivationNonce.byteOffset,
+      derivationNonce.byteOffset + derivationNonce.byteLength,
+    ) as ArrayBuffer,
+  );
   const salt = new Uint8Array(saltBuf);
 
   const seed64 = await deriveKey(masterPassword, salt, { ...STRONG_ARGON2_PARAMS, ...params }, 64);
 
-  const kpSeed  = seed64.slice(0, 32);
+  const kpSeed = seed64.slice(0, 32);
   const wrapKey = new Uint8Array(seed64.slice(32, 64));
   wipe(seed64);
 
