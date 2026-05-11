@@ -1,6 +1,6 @@
 {
   "name": "@paranoia-ts/monorepo",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Monorepo for paranoia-ts — Hybrid post-quantum end-to-end encryption for frontend applications.",
   "private": true,
   "workspaces": [

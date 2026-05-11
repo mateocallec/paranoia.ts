@@ -6,7 +6,7 @@ This document outlines the direction of paranoia.ts. It is intentionally lightwe
 
 ## Current focus
 
-The project just reached **v1.0.1**. The immediate priorities are:
+The project just reached **v1.0.2**. The immediate priorities are:
 
 - **Bug fixes** — address issues reported by users as the library sees broader adoption
 - **Feedback integration** — incorporate suggestions from early adopters, particularly around API ergonomics and edge cases

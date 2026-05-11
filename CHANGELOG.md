@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] — 2026-05-11
+
+### Fixed
+
+- `paranoia-cli`: added `files` field to `package.json` so the `dist/` directory is included in the npm tarball — without it, npm fell back to `.gitignore` which excludes `dist/`, causing the `paranoia` binary to be missing after `npm install -g paranoia-cli`
+
+---
+
 ## [1.0.1] — 2026-05-11
 
 ### Added
@@ -80,5 +88,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.0.2]: https://github.com/mateocallec/paranoia.ts/releases/tag/v1.0.2
 [1.0.1]: https://github.com/mateocallec/paranoia.ts/releases/tag/v1.0.1
 [1.0.0]: https://github.com/mateocallec/paranoia.ts/releases/tag/v1.0.0
