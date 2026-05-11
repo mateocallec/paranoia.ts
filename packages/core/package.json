@@ -1,6 +1,6 @@
 {
   "name": "paranoia-ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Hybrid post-quantum end-to-end encryption for frontend applications — ML-KEM-1024 + P-521 + AES-256-GCM + Argon2id, built for the browser and Node.js.",
   "type": "module",
   "main": "./dist/paranoia.umd.cjs",

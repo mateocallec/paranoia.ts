@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] — 2026-05-11
+
+### Added
+
+- Dedicated `README.md` for `packages/core` (paranoia-ts npm package documentation)
+- Dedicated `README.md` for `packages/cli` (paranoia-cli npm package documentation)
+- `.github/ISSUE_TEMPLATE/` — bug report, feature request, and config with security redirect
+- `.github/workflows/publish.yml` — automated npm publish on GitHub release (trusted publisher, SLSA provenance)
+- `documentation/` directory for logo and assets
+- Reference to [paranoia-messaging](https://github.com/mateocallec/paranoia-messaging) in README
+
+### Fixed (security audit)
+
+- **H1** — Argon2id cost parameters are now authenticated as AES-GCM AAD; tampering is detected before any computation runs; parameter ranges are validated to prevent resource-exhaustion DoS
+- **H2** — WebAuthn `registerWebAuthnPRF` and `registerWebAuthnCredential` now accept a `userId` parameter — prevents credential collision when multiple users share a device
+- **L4** — `sealTo` / `unsealWith` now include `SHA-256(recipientPublicKey)` as AES-GCM AAD, binding ciphertext to the intended recipient
+- **M1** — `enableWebcamEntropy` clears any existing refresh timer before starting a new one (resource leak on repeated calls)
+- **M2** — P-521 private key is imported via PKCS#8 binary DER instead of JWK base64url string, eliminating transient JS string materialisation of the private scalar
+- **M3** — `toB64url` rewritten with a `for…of` loop to prevent `RangeError` on large inputs via spread-argument stack overflow
+- **L1** — `ikm` buffer wiped immediately after `importKey` in `deriveWebAuthnWrappingKey`
+- **L2** — Concatenated key buffer wiped after HMAC call in `injectEntropy`
+- **L3** — `deriveKeyPairFromMasterPassword` salt construction uses length-prefixed encoding to prevent username/nonce collision
+- **L5** — Worker `default` branch no longer reflects attacker-controlled `op` value in the error message
+- Deprecated `p521` export replaced with `secp521r1` alias from `@noble/curves/p521`
+
+---
+
 ## [1.0.0] — 2026-05-10
 
 ### Added
@@ -53,4 +80,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.0.1]: https://github.com/mateocallec/paranoia.ts/releases/tag/v1.0.1
 [1.0.0]: https://github.com/mateocallec/paranoia.ts/releases/tag/v1.0.0

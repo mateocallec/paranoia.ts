@@ -1,6 +1,6 @@
 {
   "name": "paranoia-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Post-quantum hybrid encryption CLI — seal and open files with ML-KEM-1024 + P-521 + AES-256-GCM, generate entropy, and manage keypairs.",
   "type": "module",
   "bin": {

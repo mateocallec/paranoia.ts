@@ -23,7 +23,7 @@ program
     ),
   )
   .version(
-    '1.0.0\n' +
+    '1.0.1\n' +
     pc.dim('Author : Matéo Florian Callec <mateo@callec.net>'),
     '-V, --version',
   );
