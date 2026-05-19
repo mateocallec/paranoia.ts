@@ -1,6 +1,6 @@
 <div align="center">
   <img src="documentation/logo.png" alt="paranoia.ts logo" width="180" />
-  <h1>paranoia.ts</h1>
+  <h1>Paranoia.ts</h1>
   <p><strong>Hybrid post-quantum end-to-end encryption for frontend applications.</strong></p>
 
   [![npm](https://img.shields.io/npm/v/paranoia-ts?style=flat-square&color=black)](https://www.npmjs.com/package/paranoia-ts)
@@ -14,7 +14,7 @@
 
 ---
 
-**paranoia.ts** is a TypeScript-first cryptography library that combines classical and post-quantum algorithms in a hybrid construction, ensuring your data remains protected even against quantum computers — while staying compatible with every modern JavaScript runtime.
+**Paranoia.ts** is a TypeScript-first cryptography library that combines classical and post-quantum algorithms in a hybrid construction, ensuring your data remains protected even against quantum computers — while staying compatible with every modern JavaScript runtime.
 
 > **"If one algorithm is broken, the other still holds."**
 
@@ -22,7 +22,7 @@
 
 ## Reference implementation
 
-A full end-to-end encrypted messaging application built with paranoia.ts is available as a reference implementation:
+A full end-to-end encrypted messaging application built with Paranoia.ts is available as a reference implementation:
 
 **[paranoia-messaging](https://github.com/mateocallec/paranoia-messaging)** — E2EE chat app (NestJS · React · Docker) demonstrating hybrid PQC encryption, WebAuthn PRF biometric unlock, and double-authentication.
 
@@ -30,7 +30,7 @@ A full end-to-end encrypted messaging application built with paranoia.ts is avai
 
 ## Table of Contents
 
-- [Why paranoia.ts?](#why-paranoia-ts)
+- [Why Paranoia.ts?](#why-paranoia-ts)
 - [Features](#features)
 - [Architecture](#architecture)
 - [Installation](#installation)
@@ -47,9 +47,9 @@ A full end-to-end encrypted messaging application built with paranoia.ts is avai
 
 ## Why paranoia.ts?
 
-Most cryptography libraries make you choose between classical security and post-quantum security. paranoia.ts does both — simultaneously.
+Most cryptography libraries make you choose between classical security and post-quantum security. Paranoia.ts does both — simultaneously.
 
-| Threat | Classical only | PQC only | **paranoia.ts** |
+| Threat | Classical only | PQC only | **Paranoia.ts** |
 |---|---|---|---|
 | Classical adversary | ✅ | ⚠️ (unproven) | ✅ |
 | Quantum adversary | ❌ | ✅ | ✅ |
@@ -280,7 +280,7 @@ paranoia open secret.txt.para -k keys.json
 
 ## Security Model
 
-### What paranoia.ts guarantees
+### What Paranoia.ts guarantees
 
 - **Hybrid security** — requires simultaneous breaks of both ML-KEM-1024 (lattice) and P-521 (elliptic curve) to recover any plaintext
 - **Constant-time P-521 ECDH** — SubtleCrypto `deriveBits` (vendor-guaranteed, BoringSSL/OpenSSL)
